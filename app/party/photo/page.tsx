@@ -42,6 +42,7 @@ export default function Page() {
           ref={inputRef}
           onChange={handleFileChange}
           hidden
+          accept="image/*"
         />
       </label>
       <div>
