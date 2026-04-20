@@ -9,7 +9,7 @@ import { url } from "node:inspector/promises";
 export function setThree(canvas: HTMLCanvasElement) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
-  const WIDTH = 300;
+  const WIDTH = 400;
   const HEIGHT = 300;
   const aspect = WIDTH / HEIGHT;
   // const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);

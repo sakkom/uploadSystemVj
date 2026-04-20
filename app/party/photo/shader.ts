@@ -35,8 +35,8 @@ export const shader0 = {
    vec2 coverUv(vec2 uv, float aspect) {
      vec2 c = uv -.5;
 
-     if(aspect > 1.) c.x /= aspect;
-     else c.y *= aspect;
+     if(aspect > 1.) c.x /= aspect / (4./3.);
+     else c.y *= aspect / (4./3.);
      return c + .5;
    }
 
@@ -48,7 +48,8 @@ export const shader0 = {
      float ratio = fract(uTime * 1.);
 
      float block = floor(ratio * 50.) + 5.;
-     vec2 blockUv = floor((uv1 - .5)* block) / block + .5;
+     vec2 blockUv = floor((vUv - .5)* block) / block + .5;
+     blockUv = coverUv(blockUv, uAspect1);
 
      vec3 texCol0 = texture2D(uTex0, uv0).rgb;
      vec3 texCol1 = texture2D(uTex1, blockUv).rgb;
