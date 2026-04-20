@@ -1,5 +1,29 @@
 import * as THREE from "three";
-import { shader0 } from "./shader";
+import { shader0, shader1, shader2 } from "./shader";
+
+function ajustAspect(
+  tex: THREE.Texture<HTMLImageElement, THREE.TextureEventMap>,
+  camera: THREE.PerspectiveCamera,
+) {
+  //整列手順
+  const imgWidth = tex.image.width;
+  const imgHeight = tex.image.height;
+  const aspect = imgWidth / imgHeight;
+  const rFov = (camera.fov * Math.PI) / 180;
+  //元のplane(2, 2)すなわち1倍から何倍するか,三角錐abc、 tan = b/c
+  const scaleH = Math.tan(rFov / 2) * camera.position.z;
+  const scaleW = scaleH * aspect;
+  return { scaleH, scaleW };
+}
+
+function randomEffect(mat: THREE.ShaderMaterial) {
+  const effect = shaderMap[Math.floor(Math.random() * shaderMap.length)];
+  mat.vertexShader = effect.vertexShader;
+  mat.fragmentShader = effect.fragmentShader;
+  mat.needsUpdate = true;
+}
+
+const shaderMap = [shader0, shader1, shader2];
 
 export function imagePreview(scene: THREE.Scene) {
   const group = new THREE.Group();
@@ -32,17 +56,9 @@ export function imagePreview(scene: THREE.Scene) {
     loader.load(url, (tex) => {
       uniforms.uTex.value = tex;
 
-      //整列手順
-      const imgWidth = tex.image.width;
-      const imgHeight = tex.image.height;
-      const aspect = imgWidth / imgHeight;
-      const rFov = (camera.fov * Math.PI) / 180;
-      //元のplane(2, 2)すなわち1倍から何倍するか,三角錐abc、 tan = b/c
-      const planeH = Math.tan(rFov / 2) * camera.position.z;
-      const planeW = planeH * aspect;
-      //
-
-      if (mesh) mesh.scale.set(planeW, planeH, 1);
+      const { scaleH, scaleW } = ajustAspect(tex, camera);
+      if (mesh) mesh.scale.set(scaleW, scaleH, 1);
+      randomEffect(mesh?.material as THREE.ShaderMaterial);
     });
     uniforms.uTime.value = time;
   };

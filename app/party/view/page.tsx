@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { imagePreview } from "./imagePreview";
 
-function setThree(canvas: HTMLCanvasElement) {
+export function setThree(canvas: HTMLCanvasElement) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
   const WIDTH = window.innerWidth;
