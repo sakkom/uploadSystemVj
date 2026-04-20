@@ -34,17 +34,16 @@ export default function Page() {
 
   return (
     <div>
-      <label>
-        file select
-        <input
-          type="file"
-          multiple
-          ref={inputRef}
-          onChange={handleFileChange}
-          hidden
-          accept="image/*"
-        />
-      </label>
+      <label htmlFor="file-interface">file interface</label>
+      <input
+        id="file-interface"
+        type="file"
+        multiple
+        ref={inputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        style={{ display: "none" }}
+      />
       <div>
         {previews.map((url, i) => (
           <img key={i} src={url} style={{ width: "100%", maxWidth: 300 }} />

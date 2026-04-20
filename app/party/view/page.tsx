@@ -14,7 +14,7 @@ function setThree(canvas: HTMLCanvasElement) {
   const HEIGHT = window.innerHeight;
   const aspect = WIDTH / HEIGHT;
   // const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
-  const camera = new THREE.PerspectiveCamera(45, 1 / 1, 0.1, 100);
+  const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 100);
   const renderer = new THREE.WebGLRenderer({
     canvas,
     antialias: true,
@@ -101,7 +101,7 @@ export default function Page() {
             Math.floor(Math.random() * allImages.current.length)
           ];
 
-        if (url) view.update(url, time);
+        if (url) view.update(url, time, camera);
       }
       renderer.render(scene, camera);
       requestAnimationFrame(loop);

@@ -23,6 +23,10 @@ export async function POST(req: NextRequest) {
 
   const imageFileDataArrayBuffer = await imageFileData.arrayBuffer();
   const imageFileDataBuffer = Buffer.from(imageFileDataArrayBuffer);
+  console.log({
+    imageFileDataArrayBuffer: imageFileDataArrayBuffer,
+    imageFileDataBuffer,
+  });
 
   const key = `${new Date().getTime()}_${imageFileData.name}`;
 
