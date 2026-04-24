@@ -121,15 +121,15 @@ export default function Page() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    setIsLoading(true);
     if (!files) return;
+    setIsLoading(true);
     const urls = Array.from(files).map((file) => URL.createObjectURL(file));
 
     const promises = urls.map((url) => loader.loadAsync(url));
     Promise.all(promises).then((textures) => {
       inputImgs.current = textures;
-      setIsLoading(false);
       setIsFile(true);
+      // setIsLoading(false);
     });
 
     setPreviews(urls);
@@ -170,7 +170,6 @@ export default function Page() {
       renderer.render(scene, camera);
       if (!readySet) {
         readySet = true;
-        setIsLoading(true);
         setTimeout(() => {
           setIsReady(true);
           setIsLoading(false);
