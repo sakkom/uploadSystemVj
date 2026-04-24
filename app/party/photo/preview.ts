@@ -38,6 +38,7 @@ export function previewShader(scene: THREE.Scene) {
     uTex1: { value: new THREE.Texture() },
     uAspect0: { value: 1.0 },
     uAspect1: { value: 1.0 },
+    uButtonRatio: { value: 0 },
   };
 
   const init = () => {
@@ -78,8 +79,9 @@ export function previewShader(scene: THREE.Scene) {
     // uniforms.uTime.value = timer.getElapsed();
   };
 
-  const tick = (time: number) => {
+  const tick = (time: number, buttonRatio: number) => {
     uniforms.uTime.value = time;
+    uniforms.uButtonRatio.value = buttonRatio;
   };
 
   return {

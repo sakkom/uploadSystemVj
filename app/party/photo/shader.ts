@@ -1,3 +1,5 @@
+import { INTERFACE_ASPECT } from "./constant";
+
 export const shader0 = {
   vertexShader: `
      varying vec2 vUv;
@@ -14,6 +16,7 @@ export const shader0 = {
    uniform sampler2D uTex1;
    uniform float uAspect0;
    uniform float uAspect1;
+   uniform float uButtonRatio;
 
    float rand1(float y) {
      return fract(sin(y * 12.9898) * 43758.5453123);
@@ -35,8 +38,8 @@ export const shader0 = {
    vec2 coverUv(vec2 uv, float aspect) {
      vec2 c = uv -.5;
 
-     if(aspect > 1.) c.x /= aspect / (4./3.);
-     else c.y *= aspect / (4./3.);
+     if(aspect > 1.) c.x /= aspect / ${INTERFACE_ASPECT};
+     else c.y *= aspect / ${INTERFACE_ASPECT};
      return c + .5;
    }
 
@@ -45,14 +48,14 @@ export const shader0 = {
      vec2 uv0 = coverUv(uv, uAspect0);
      vec2 uv1 = coverUv(uv, uAspect1);
 
-     float ratio = fract(uTime * 1.);
+     float ratio = fract(uTime * 5.);
 
      float block = floor(ratio * 50.) + 5.;
      vec2 blockUv = floor((vUv - .5)* block) / block + .5;
      blockUv = coverUv(blockUv, uAspect1);
 
      vec3 texCol0 = texture2D(uTex0, uv0).rgb;
-     vec3 texCol1 = texture2D(uTex1, blockUv).rgb;
+     vec3 texCol1 = texture2D(uTex1, uv1).rgb;
 
      vec3 mixCol = mix(texCol0, texCol1, ratio);
 

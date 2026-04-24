@@ -2,18 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-
 import { previewShader } from "./preview";
-import { url } from "node:inspector/promises";
+import { CHANGE, INTERFACE_ASPECT, SEND } from "./constant";
 
 export function setThree(canvas: HTMLCanvasElement) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
-  const WIDTH = 400;
-  const HEIGHT = 300;
-  const aspect = WIDTH / HEIGHT;
+  const WIDTH = canvas.clientWidth;
+  const HEIGHT = WIDTH / INTERFACE_ASPECT;
   // const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
-  const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 100);
+  const camera = new THREE.PerspectiveCamera(45, INTERFACE_ASPECT, 0.1, 100);
   const renderer = new THREE.WebGLRenderer({
     canvas,
     antialias: true,
@@ -24,26 +22,72 @@ export function setThree(canvas: HTMLCanvasElement) {
   renderer.setPixelRatio(1);
   renderer.setSize(WIDTH, HEIGHT);
   scene.background = null;
-  return { scene, camera, renderer, aspect };
+  return { scene, camera, renderer, aspect: INTERFACE_ASPECT };
 }
 
 export default function Page() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previews, setPreviews] = useState<string[]>([]);
   const inputImgs = useRef<THREE.Texture[]>([]);
-  // const [previewIndex, setPreviewIndex] = useState<number>(0);
-  // const clock = new THREE.Clock();
+  const [isFile, setIsFile] = useState<boolean>(false);
+  const [isDone, setIsDone] = useState<boolean>(false);
+  //preview interface design
+  const [buttonRatio, setButtonRatio] = useState<number>(0);
+  const buttonRatioRef = useRef<number>(0);
+  const [changeCount, setChangeCount] = useState<number>();
+  //typography
+  const [timeState, setTimeState] = useState<number>(0);
+
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    let counter = 0;
+    const interval = setInterval(() => {
+      setTimeState(counter);
+      counter += 1;
+    }, 300);
+    return () => clearInterval(interval);
+  }, []);
+
+  // const [flush, setFlush] = useState<number>(0);
+  // useEffect(() => {
+  //   let counter = 0;
+  //   const interval = setInterval(() => {
+  //     let num = (counter % 1) * previews.length;
+  //     setFlush(Math.floor(num));
+  //     counter += 0.1;
+  //   }, 25);
+  //   return () => clearInterval(interval);
+  // }, [previews]);
+
+  useEffect(() => {
+    let counter = 0;
+    const interval = setInterval(() => {
+      const index = counter % CHANGE.length;
+      // const index = counter % 10000;
+
+      setChangeCount(Math.floor(index));
+      counter += 1;
+    }, 300);
+    return () => clearInterval(interval);
+  }, []);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const loader = new THREE.TextureLoader();
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     const index = Math.floor((clock.getElapsedTime() * 2) % previews.length);
-  //     setPreviewIndex(index);
-  //   }, 500);
-  //   return () => clearInterval(interval);
-  // }, [previews]);
+  //preview interface design
+  useEffect(() => {
+    let counter = 0;
+    const interval = setInterval(() => {
+      let ratio = counter % 1;
+      buttonRatioRef.current = ratio;
+      ratio = Math.round(ratio * 10) / 10;
+      // console.log(ratio);
+      setButtonRatio(ratio);
+      counter += 0.1;
+    }, 300);
+    return () => clearInterval(interval);
+  }, []);
 
   const uploadFile = async (file: File) => {
     const formData = new FormData();
@@ -62,6 +106,10 @@ export default function Page() {
     const files = inputRef.current?.files;
     if (!files) return;
     await Promise.all(Array.from(files).map(uploadFile));
+    setIsReady(false);
+    setIsDone(true);
+    setIsFile(false);
+    setTimeout(() => setIsDone(false), 3000);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,6 +121,7 @@ export default function Page() {
     const promises = urls.map((url) => loader.loadAsync(url));
     Promise.all(promises).then((textures) => {
       inputImgs.current = textures;
+      setIsFile(true);
     });
 
     setPreviews(urls);
@@ -89,7 +138,7 @@ export default function Page() {
     //bpm test clock
     const timer = new THREE.Timer();
     let bpmCounter = 0;
-
+    let readySet = false;
     const loop = () => {
       if (inputImgs.current.length === 0) {
         requestAnimationFrame(loop);
@@ -97,12 +146,12 @@ export default function Page() {
       }
       timer.update();
       const time = timer.getElapsed();
-      const bpm = 60;
+      const bpm = 240;
       const bpmCount = Math.floor((bpm / 60) * time);
       const onBpm = bpmCounter !== bpmCount;
       bpmCounter = bpmCount;
 
-      view.tick(time);
+      view.tick(time, buttonRatioRef.current);
       if (onBpm) {
         const url0 = inputImgs.current[bpmCounter % inputImgs.current.length];
         const url1 =
@@ -111,14 +160,17 @@ export default function Page() {
         if (url0 && url1) view.update([url0, url1], camera);
       }
       renderer.render(scene, camera);
+      if (!readySet) {
+        readySet = true;
+        setTimeout(() => setIsReady(true), 500);
+      }
       requestAnimationFrame(loop);
     };
     loop();
-  }, []);
+  }, [isFile]);
 
   return (
-    <div>
-      <label htmlFor="file-interface">open</label>
+    <div style={{ overflow: "hidden" }}>
       <input
         id="file-interface"
         type="file"
@@ -127,31 +179,166 @@ export default function Page() {
         onChange={handleFileChange}
         accept="image/*"
         style={{ display: "none" }}
+        disabled={isFile ? isDone || !isReady : isDone}
       />
+      {!isFile && (
+        <label
+          htmlFor="file-interface"
+          style={{
+            width: "100vw",
+            height: "100dvh",
+            display: "flex",
+            // flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            fontWeight: "bold",
+            cursor: "pointer",
+            userSelect: "none",
+          }}
+        >
+          {isDone
+            ? "ありがとうございます".split("").map((char, i) => {
+                const letterSpaceValue = Math.floor(
+                  (Math.sin(i * 200 + timeState) * 0.5 + 0.5) * 30,
+                );
+                return (
+                  <span
+                    key={i}
+                    style={{ letterSpacing: `${letterSpaceValue}px` }}
+                  >
+                    {char}
+                  </span>
+                );
+              })
+            : "open".split("").map((char, i) => {
+                const letterSpaceValue = Math.floor(
+                  (Math.sin(i * 200 + timeState) * 0.5 + 0.5) * 30,
+                );
+                return (
+                  <span
+                    key={i}
+                    style={{ letterSpacing: `${letterSpaceValue}px` }}
+                  >
+                    {char}
+                  </span>
+                );
+              })}
+        </label>
+      )}
 
-      <div style={{ position: "relative", width: "50vw", height: "50vh" }}>
-        <canvas
-          ref={canvasRef}
+      {isFile && (
+        <div
           style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
+            width: "100vw",
+            height: "100dvh",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            fontWeight: "bold",
+            userSelect: "none",
+            opacity: isReady ? 1 : 0,
           }}
-        />
-      </div>
-      {/*<div>
-        <img
-          key={previewIndex}
-          src={previews[previewIndex]}
-          className={"scale-in-0"}
-          style={{
-            width: "100%",
-            maxWidth: 500,
-          }}
-        />
-      </div>*/}
-      <button onClick={handleSubmit}>submit</button>
+        >
+          <div
+            className="input_interface"
+            style={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <>
+              <label
+                htmlFor="file-interface"
+                style={{
+                  flex: buttonRatio,
+                  overflow: "hidden",
+                  wordBreak: "break-all",
+                  zIndex: 1,
+                  lineHeight: "80px",
+                  position: "relative",
+                  cursor: "pointer",
+                }}
+              >
+                {Array.from({ length: 2000 }, (_, i) => {
+                  const opacityValue = Math.floor(i / CHANGE.length) % 12 === 0;
+                  const letterSpacing = Math.floor(
+                    (Math.sin(i * 0.1) * 0.5 + 0.5) * 5,
+                  );
+                  return (
+                    <span
+                      key={i}
+                      style={{
+                        opacity: opacityValue ? 0 : 1,
+                        fontSize: opacityValue ? "80px" : "15px",
+                        display: "inline-block",
+                        letterSpacing: `${letterSpacing}px`,
+                        transform: `translateY(${(Math.sin(i * 0.1) * 20).toFixed(4)}px)`,
+                      }}
+                    >
+                      {CHANGE[i % CHANGE.length]}
+                    </span>
+                  );
+                })}
+              </label>
+            </>
+
+            <canvas
+              ref={canvasRef}
+              style={{
+                width: `100%`,
+                aspectRatio: `${INTERFACE_ASPECT}`,
+                zIndex: 0,
+                paddingRight: "20px",
+                paddingLeft: "20px",
+              }}
+            />
+            {/*<div>
+              <img
+                src={previews[flush]}
+                style={{ width: "100%", aspectRatio: `${INTERFACE_ASPECT}` }}
+              />
+            </div>*/}
+            <div
+              onClick={isReady ? handleSubmit : undefined}
+              style={{
+                flex: 1 - buttonRatio,
+                overflow: "hidden",
+                wordBreak: "break-all",
+                lineHeight: "80px",
+                display: "flex",
+                alignContent: "flex-end",
+                flexWrap: "wrap",
+                position: "relative",
+                cursor: "pointer",
+                pointerEvents: "all",
+              }}
+            >
+              {Array.from({ length: 2000 }, (_, i) => {
+                const opacityValue = Math.floor(i / SEND.length) % 12 === 0;
+                const letterSpacing = Math.floor(
+                  (Math.sin(i * 0.1) * 0.5 + 0.5) * 5,
+                );
+                return (
+                  <span
+                    key={i}
+                    style={{
+                      opacity: opacityValue ? 0 : 1,
+                      fontSize: opacityValue ? "80px" : "15px",
+                      letterSpacing: `${letterSpacing}px`,
+                      display: "inline-block",
+                      transform: `translateY(${(Math.sin(i * 0.1) * 20).toFixed(4)}px) `,
+                    }}
+                  >
+                    {SEND[i % SEND.length]}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
