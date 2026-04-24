@@ -84,12 +84,12 @@ export default function Page() {
   useEffect(() => {
     let counter = 0;
     const interval = setInterval(() => {
-      let ratio = counter % 1;
+      let ratio = (counter % 11) / 10;
       buttonRatioRef.current = ratio;
       ratio = Math.round(ratio * 10) / 10;
       // console.log(ratio);
       setButtonRatio(ratio);
-      counter += 0.1;
+      counter += 1;
     }, 300);
     return () => clearInterval(interval);
   }, []);
