@@ -5,6 +5,9 @@ import * as THREE from "three";
 import { previewShader } from "./preview";
 import { CHANGE, INTERFACE_ASPECT, SEND } from "./constant";
 
+const SPAN_COUNT =
+  typeof window !== "undefined" && window.innerWidth < 768 ? 300 : 1000;
+
 export function setThree(canvas: HTMLCanvasElement) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
@@ -31,6 +34,7 @@ export default function Page() {
   const inputImgs = useRef<THREE.Texture[]>([]);
   const [isFile, setIsFile] = useState<boolean>(false);
   const [isDone, setIsDone] = useState<boolean>(false);
+  const [isLoad, setIsLoad] = useState<boolean>(false);
   //preview interface design
   const [buttonRatio, setButtonRatio] = useState<number>(0);
   const buttonRatioRef = useRef<number>(0);
@@ -103,9 +107,11 @@ export default function Page() {
   };
 
   const handleSubmit = async () => {
+    setIsLoad(true);
     const files = inputRef.current?.files;
     if (!files) return;
     await Promise.all(Array.from(files).map(uploadFile));
+    setIsLoad(false);
     setIsReady(false);
     setIsDone(true);
     setIsFile(false);
@@ -226,7 +232,7 @@ export default function Page() {
         </label>
       )}
 
-      {isFile && (
+      {isFile && !isLoad && (
         <div
           style={{
             width: "100vw",
@@ -261,7 +267,7 @@ export default function Page() {
                   cursor: "pointer",
                 }}
               >
-                {Array.from({ length: 2000 }, (_, i) => {
+                {Array.from({ length: SPAN_COUNT }, (_, i) => {
                   const opacityValue = Math.floor(i / CHANGE.length) % 12 === 0;
                   const letterSpacing = Math.floor(
                     (Math.sin(i * 0.1) * 0.5 + 0.5) * 5,
@@ -315,7 +321,7 @@ export default function Page() {
                 pointerEvents: "all",
               }}
             >
-              {Array.from({ length: 2000 }, (_, i) => {
+              {Array.from({ length: SPAN_COUNT }, (_, i) => {
                 const opacityValue = Math.floor(i / SEND.length) % 12 === 0;
                 const letterSpacing = Math.floor(
                   (Math.sin(i * 0.1) * 0.5 + 0.5) * 5,
@@ -337,6 +343,31 @@ export default function Page() {
               })}
             </div>
           </div>
+        </div>
+      )}
+
+      {isLoad && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            width: "100vw",
+            height: "100dvh",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {"sending........".split("").map((char, i) => {
+            const letterSpaceValue = Math.floor(
+              (Math.sin(i * 200 + timeState) * 0.5 + 0.5) * 30,
+            );
+            return (
+              <span key={i} style={{ letterSpacing: `${letterSpaceValue}px` }}>
+                {char}
+              </span>
+            );
+          })}
         </div>
       )}
     </div>
