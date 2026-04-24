@@ -122,7 +122,7 @@ export default function Page() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    setIsLoading(true);
+    if (!isFile) setIsLoading(true);
     const urls = Array.from(files).map((file) => URL.createObjectURL(file));
 
     const promises = urls.map((url) => loader.loadAsync(url));
@@ -137,6 +137,7 @@ export default function Page() {
 
   useEffect(() => {
     if (!canvasRef.current) return;
+    setIsLoading(false);
     const { scene, camera, renderer, aspect } = setThree(canvasRef.current);
     camera.position.z = 2;
 
@@ -172,7 +173,6 @@ export default function Page() {
         readySet = true;
         setTimeout(() => {
           setIsReady(true);
-          setIsLoading(false);
         }, 500);
       }
       requestAnimationFrame(loop);
