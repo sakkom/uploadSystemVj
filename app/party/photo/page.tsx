@@ -128,7 +128,8 @@ export default function Page() {
     const promises = urls.map((url) => loader.loadAsync(url));
     Promise.all(promises).then((textures) => {
       inputImgs.current = textures;
-      setIsFile(true);
+      // setIsFile(true);
+      setTimeout(() => setIsFile(true), 500);
       // setIsLoading(false);
     });
 
@@ -258,6 +259,7 @@ export default function Page() {
             userSelect: "none",
             WebkitUserSelect: "none",
             opacity: isReady ? 1 : 0,
+            marginTop: "-40px",
           }}
         >
           <div
