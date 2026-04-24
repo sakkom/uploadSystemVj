@@ -129,7 +129,7 @@ export default function Page() {
     Promise.all(promises).then((textures) => {
       inputImgs.current = textures;
       // setIsFile(true);
-      setTimeout(() => setIsFile(true), 500);
+      setTimeout(() => setIsFile(true), 600);
       // setIsLoading(false);
     });
 
@@ -193,7 +193,7 @@ export default function Page() {
         style={{ display: "none" }}
         disabled={isFile ? isDone || !isReady : isDone}
       />
-      {!isFile && (
+      {!isFile && !isLoading && (
         <div
           style={{
             width: "100vw",
