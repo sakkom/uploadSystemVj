@@ -6,7 +6,7 @@ import { previewShader } from "./preview";
 import { CHANGE, INTERFACE_ASPECT, SEND } from "./constant";
 
 const SPAN_COUNT =
-  typeof window !== "undefined" && window.innerWidth < 768 ? 330 : 1000;
+  typeof window !== "undefined" && window.innerWidth < 768 ? 332 : 1000;
 
 export function setThree(canvas: HTMLCanvasElement) {
   const scene = new THREE.Scene();
@@ -121,13 +121,14 @@ export default function Page() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    console.log(files);
+    setIsLoading(true);
     if (!files) return;
     const urls = Array.from(files).map((file) => URL.createObjectURL(file));
 
     const promises = urls.map((url) => loader.loadAsync(url));
     Promise.all(promises).then((textures) => {
       inputImgs.current = textures;
+      setIsLoading(false);
       setIsFile(true);
     });
 
@@ -211,6 +212,7 @@ export default function Page() {
               userSelect: "none",
               WebkitTapHighlightColor: "transparent",
               padding: "100px",
+              whiteSpace: "nowrap",
             }}
           >
             {isDone
