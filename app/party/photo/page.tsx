@@ -6,7 +6,7 @@ import { previewShader } from "./preview";
 import { CHANGE, INTERFACE_ASPECT, SEND } from "./constant";
 
 const SPAN_COUNT =
-  typeof window !== "undefined" && window.innerWidth < 768 ? 300 : 1000;
+  typeof window !== "undefined" && window.innerWidth < 768 ? 330 : 1000;
 
 export function setThree(canvas: HTMLCanvasElement) {
   const scene = new THREE.Scene();
@@ -34,7 +34,8 @@ export default function Page() {
   const inputImgs = useRef<THREE.Texture[]>([]);
   const [isFile, setIsFile] = useState<boolean>(false);
   const [isDone, setIsDone] = useState<boolean>(false);
-  const [isLoad, setIsLoad] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   //preview interface design
   const [buttonRatio, setButtonRatio] = useState<number>(0);
   const buttonRatioRef = useRef<number>(0);
@@ -107,11 +108,11 @@ export default function Page() {
   };
 
   const handleSubmit = async () => {
-    setIsLoad(true);
+    setIsSending(true);
     const files = inputRef.current?.files;
     if (!files) return;
     await Promise.all(Array.from(files).map(uploadFile));
-    setIsLoad(false);
+    setIsSending(false);
     setIsReady(false);
     setIsDone(true);
     setIsFile(false);
@@ -168,7 +169,11 @@ export default function Page() {
       renderer.render(scene, camera);
       if (!readySet) {
         readySet = true;
-        setTimeout(() => setIsReady(true), 500);
+        setIsLoading(true);
+        setTimeout(() => {
+          setIsReady(true);
+          setIsLoading(false);
+        }, 500);
       }
       requestAnimationFrame(loop);
     };
@@ -188,51 +193,58 @@ export default function Page() {
         disabled={isFile ? isDone || !isReady : isDone}
       />
       {!isFile && (
-        <label
-          htmlFor="file-interface"
+        <div
           style={{
             width: "100vw",
             height: "100dvh",
             display: "flex",
-            // flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
             fontWeight: "bold",
-            cursor: "pointer",
-            userSelect: "none",
           }}
         >
-          {isDone
-            ? "ありがとうございます".split("").map((char, i) => {
-                const letterSpaceValue = Math.floor(
-                  (Math.sin(i * 200 + timeState) * 0.5 + 0.5) * 30,
-                );
-                return (
-                  <span
-                    key={i}
-                    style={{ letterSpacing: `${letterSpaceValue}px` }}
-                  >
-                    {char}
-                  </span>
-                );
-              })
-            : "open".split("").map((char, i) => {
-                const letterSpaceValue = Math.floor(
-                  (Math.sin(i * 200 + timeState) * 0.5 + 0.5) * 30,
-                );
-                return (
-                  <span
-                    key={i}
-                    style={{ letterSpacing: `${letterSpaceValue}px` }}
-                  >
-                    {char}
-                  </span>
-                );
-              })}
-        </label>
+          <label
+            htmlFor="file-interface"
+            style={{
+              cursor: "pointer",
+              WebkitUserSelect: "none",
+              userSelect: "none",
+              WebkitTapHighlightColor: "transparent",
+              padding: "100px",
+            }}
+          >
+            {isDone
+              ? "ありがとうございます".split("").map((char, i) => {
+                  const letterSpaceValue = Math.floor(
+                    (Math.sin(i * 200 + timeState) * 0.5 + 0.5) * 30,
+                  );
+                  return (
+                    <span
+                      key={i}
+                      style={{ letterSpacing: `${letterSpaceValue}px` }}
+                    >
+                      {char}
+                    </span>
+                  );
+                })
+              : "open".split("").map((char, i) => {
+                  const letterSpaceValue = Math.floor(
+                    (Math.sin(i * 200 + timeState) * 0.5 + 0.5) * 30,
+                  );
+                  return (
+                    <span
+                      key={i}
+                      style={{ letterSpacing: `${letterSpaceValue}px` }}
+                    >
+                      {char}
+                    </span>
+                  );
+                })}
+          </label>
+        </div>
       )}
 
-      {isFile && !isLoad && (
+      {isFile && !isSending && (
         <div
           style={{
             width: "100vw",
@@ -243,6 +255,7 @@ export default function Page() {
             alignItems: "center",
             fontWeight: "bold",
             userSelect: "none",
+            WebkitUserSelect: "none",
             opacity: isReady ? 1 : 0,
           }}
         >
@@ -346,7 +359,7 @@ export default function Page() {
         </div>
       )}
 
-      {isLoad && (
+      {(isSending || isLoading) && (
         <div
           style={{
             position: "fixed",
@@ -358,16 +371,33 @@ export default function Page() {
             alignItems: "center",
           }}
         >
-          {"sending........".split("").map((char, i) => {
-            const letterSpaceValue = Math.floor(
-              (Math.sin(i * 200 + timeState) * 0.5 + 0.5) * 30,
-            );
-            return (
-              <span key={i} style={{ letterSpacing: `${letterSpaceValue}px` }}>
-                {char}
-              </span>
-            );
-          })}
+          {isSending
+            ? "sending........".split("").map((char, i) => {
+                const letterSpaceValue = Math.floor(
+                  (Math.sin(i * 200 + timeState) * 0.5 + 0.5) * 30,
+                );
+                return (
+                  <span
+                    key={i}
+                    style={{ letterSpacing: `${letterSpaceValue}px` }}
+                  >
+                    {char}
+                  </span>
+                );
+              })
+            : "loading........".split("").map((char, i) => {
+                const letterSpaceValue = Math.floor(
+                  (Math.sin(i * 200 + timeState) * 0.5 + 0.5) * 30,
+                );
+                return (
+                  <span
+                    key={i}
+                    style={{ letterSpacing: `${letterSpaceValue}px` }}
+                  >
+                    {char}
+                  </span>
+                );
+              })}
         </div>
       )}
     </div>
