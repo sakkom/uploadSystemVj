@@ -43,5 +43,7 @@ export async function GET() {
       new Date(b.lastModified!).getTime() - new Date(a.lastModified!).getTime(),
   );
 
-  return NextResponse.json({ images });
+  const urls = images.map((img) => img.url);
+
+  return NextResponse.json({ urls });
 }

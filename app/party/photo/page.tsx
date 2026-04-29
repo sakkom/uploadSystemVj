@@ -229,7 +229,7 @@ export default function Page() {
                     </span>
                   );
                 })
-              : "open".split("").map((char, i) => {
+              : "openimages".split("").map((char, i) => {
                   const letterSpaceValue = Math.floor(
                     (Math.sin(i * 200 + timeState) * 0.5 + 0.5) * 30,
                   );

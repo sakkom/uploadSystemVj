@@ -3,7 +3,7 @@
 
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { imagePreview } from "./imagePreview";
 
@@ -28,103 +28,194 @@ export function setThree(canvas: HTMLCanvasElement) {
   return { scene, camera, renderer, aspect };
 }
 
+//60bpm 60beat 60s
+// 革新部分ロジックリファクタリングしよう！
+function getSketchIndex(t: number) {
+  // const 一周何秒 = 600; //600で5分で抽象具象が２回、1時間12回の抽象具象
+  const 一周何秒 = 100; //600で5分で抽象具象が２回、1時間12回の抽象具象
+  let seedTime = t;
+  seedTime *= (Math.PI * 2) / 一周何秒;
+  seedTime -= Math.PI / 2;
+  const 抽象具象 = (seedTime + Math.PI / 2) % (Math.PI * 2) < Math.PI;
+  let index = Math.sin(seedTime) * 0.5 + 0.5;
+  index *= 4;
+  index = Math.round(index);
+
+  // console.log(index, 抽象具象);
+
+  return { index, 抽象具象 };
+}
+
+const DEV = true;
+const loader = new THREE.TextureLoader();
+
+interface 抽象具像interface {
+  抽象具象: boolean;
+  bpm: number;
+  index: number;
+  texs: THREE.Texture<HTMLImageElement, THREE.TextureEventMap>[];
+  time: number;
+}
+
+function randomTexs(texCache: Map<string, THREE.Texture<HTMLImageElement>>) {
+  const arr = Array.from(texCache.values());
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export default function Page() {
-  const [images, setImages] = useState<string[]>([]);
-  const allImages = useRef<string[]>([]);
-  const isInitialized = useRef(false);
-
-  //
+  const texCache = useRef<Map<string, THREE.Texture<HTMLImageElement>>>(
+    new Map(),
+  );
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [isInitTex, setIsInitTex] = useState<boolean>(false);
+  const initial = getSketchIndex(0);
+  const termRef: RefObject<抽象具像interface> = useRef({
+    抽象具象: initial.抽象具象,
+    bpm: 50,
+    index: initial.index,
+    texs: [],
+    time: 0,
+  });
+
+  // useEffect(() => {
+  //   const poll = async () => {
+  //     if (!rendererRef.current) return;
+  //     const res = await fetch("/api/get-images");
+  //     //R2の使用上全取得
+  //     const { urls } = await res.json();
+  //     //ここのロジックで最新の画像をフィードバック
+  //     urls.forEach((url: string) => {
+  //       if (texCache.current.has(url)) return;
+  //       loader.load(url, (tex) => {
+  //         rendererRef.current?.initTexture(tex);
+  //         texCache.current.set(url, tex);
+  //       });
+  //     });
+  //   };
+
+  //   const interval = setInterval(poll, 5000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   useEffect(() => {
-    const init = async () => {
-      const res = await fetch("/api/get-images");
-      const { images } = await res.json();
-      allImages.current = images.map((img: { url: string }) => img.url);
-      setImages([...allImages.current]);
-      isInitialized.current = true;
-    };
-    init();
-  }, []);
+    (async () => {
+      if (!canvasRef.current) return;
+      const { scene, camera, renderer, aspect } = setThree(canvasRef.current);
+      rendererRef.current = renderer;
+      camera.position.z = 2;
 
-  useEffect(() => {
-    const poll = async () => {
-      if (!isInitialized.current) return;
-      const res = await fetch("/api/get-images");
-      const { images } = await res.json();
-      const urls: string[] = images.map((img: { url: string }) => img.url);
+      const init = async () => {
+        const res = await fetch("/api/get-images");
+        let { urls } = await res.json();
+        urls = DEV ? urls.slice(0, 15) : urls;
 
-      const newImages = urls.filter(
-        (url: string) => !allImages.current.includes(url),
-      );
-      if (newImages.length > 0) {
-        allImages.current = [...allImages.current, ...newImages];
-        setImages([...allImages.current]);
-        //ここに新着表示
-      } else {
-        //ここにランダム処理
-      }
-    };
+        await Promise.all(
+          urls.map(async (url: string) => {
+            if (texCache.current.has(url)) return;
+            const tex = await loader.loadAsync(url);
+            rendererRef.current?.initTexture(tex);
+            texCache.current.set(url, tex);
+          }),
+        );
+      };
+      await init();
+      //init
+      termRef.current.texs = randomTexs(texCache.current);
 
-    const interval = setInterval(poll, 5000);
-    return () => clearInterval(interval);
-  }, []);
+      setIsInitTex(true);
 
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    const { scene, camera, renderer, aspect } = setThree(canvasRef.current);
-    camera.position.z = 2;
+      const view = imagePreview(scene);
+      view.init(aspect, camera);
 
-    const view = imagePreview(scene);
-    view.init();
+      const initLive = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 1280, height: 720, frameRate: 30 },
+        });
+        streamRef.current = stream;
+        const video = document.createElement("video");
+        video.srcObject = stream;
+        await video.play();
+        const liveTex = new THREE.VideoTexture(video);
+        view.setLive(liveTex);
+      };
+      await initLive();
 
-    //bpm test clock
-    const timer = new THREE.Timer();
-    let bpmCounter = 0;
+      //bpm test clock
+      const timer = new THREE.Timer();
+      let bpmCounter = 0;
+      let lastTime = 0;
+      let frameCount = 0;
+      const loop = () => {
+        const now = performance.now();
+        frameCount++;
+        if (now - lastTime >= 1000) {
+          // console.log(`fps: ${frameCount}`);
+          frameCount = 0;
+          lastTime = now;
+        }
 
-    const loop = () => {
-      if (!isInitialized.current) {
+        timer.update();
+        const time = timer.getElapsed();
+        view.setTime(time);
+
+        const bpm = 50;
+
+        const { index, 抽象具象 } = getSketchIndex(time);
+        if (抽象具象 !== termRef.current.抽象具象) {
+          termRef.current.bpm = bpm;
+          // console.log(termRef.current, { index, 抽象具象 });
+          termRef.current.texs = randomTexs(texCache.current);
+          // console.log(arr);//重い注意
+          termRef.current.抽象具象 = 抽象具象;
+          termRef.current.time = 0;
+          bpmCounter = 0;
+        }
+        termRef.current.time += timer.getDelta();
+
+        // const bpmCount = Math.floor((bpm / 60) * time);
+        const bpmCount = Math.floor(
+          (termRef.current.bpm / 60) * termRef.current.time,
+        );
+        // console.log(bpmCount);
+        const onBpm = bpmCounter !== bpmCount;
+        bpmCounter = bpmCount;
+        // console.log({ bpmCounter, index, term: termRef.current.抽象具象 });
+
+        if (onBpm) {
+          const tex = termRef.current.texs[bpmCount];
+          if (tex) view.update(tex, termRef.current.index);
+        }
+        view.updateMaterial(index);
+
+        renderer.render(scene, camera);
         requestAnimationFrame(loop);
-        return;
-      }
-
-      timer.update();
-      const time = timer.getElapsed();
-      const bpm = 120;
-      const bpmCount = Math.floor((bpm / 60) * time);
-      const onBpm = bpmCounter !== bpmCount;
-      bpmCounter = bpmCount;
-
-      if (onBpm) {
-        const url =
-          allImages.current[
-            Math.floor(Math.random() * allImages.current.length)
-          ];
-
-        if (url) view.update(url, time, camera);
-      }
-      renderer.render(scene, camera);
-      requestAnimationFrame(loop);
-    };
-    loop();
+      };
+      loop();
+    })();
+    return () => streamRef.current?.getTracks().forEach((t) => t.stop());
   }, []);
 
   return (
-    <div>
-      {/*{images.map((url, i) => (
-        <p key={i}>{url}</p>
-      ))}*/}
-      <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
-        <canvas
-          ref={canvasRef}
+    <div style={{ position: "relative" }}>
+      {!isInitTex && (
+        <p
           style={{
             position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
           }}
-        />
-      </div>
+        >
+          .initTexture()
+        </p>
+      )}
+      <canvas ref={canvasRef} />
     </div>
   );
 }
