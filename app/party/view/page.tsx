@@ -30,15 +30,16 @@ export function setThree(canvas: HTMLCanvasElement) {
 
 //60bpm 60beat 60s
 // 革新部分ロジックリファクタリングしよう！
+const 序破急 = 2;
 function getSketchIndex(t: number) {
   // const 一周何秒 = 600; //600で5分で抽象具象が２回、1時間12回の抽象具象
-  const 一周何秒 = 100; //600で5分で抽象具象が２回、1時間12回の抽象具象
+  const 一周何秒 = 60; //600で5分で抽象具象が２回、1時間12回の抽象具象
   let seedTime = t;
   seedTime *= (Math.PI * 2) / 一周何秒;
   seedTime -= Math.PI / 2;
   const 抽象具象 = (seedTime + Math.PI / 2) % (Math.PI * 2) < Math.PI;
   let index = Math.sin(seedTime) * 0.5 + 0.5;
-  index *= 1;
+  index *= 序破急;
   index = Math.round(index);
 
   // console.log(index, 抽象具象);
@@ -77,7 +78,7 @@ export default function Page() {
   const initial = getSketchIndex(0);
   const termRef: RefObject<抽象具像interface> = useRef({
     抽象具象: initial.抽象具象,
-    bpm: 100,
+    bpm: 50,
     index: initial.index,
     texs: [],
     time: 0,
@@ -165,10 +166,13 @@ export default function Page() {
         const time = timer.getElapsed();
         view.setTime(time);
 
-        const bpm = 100;
+        const bpm = 50;
 
         const { index, 抽象具象 } = getSketchIndex(time);
-        if (抽象具象 !== termRef.current.抽象具象) {
+        if (
+          抽象具象 !== termRef.current.抽象具象 ||
+          termRef.current.index !== index
+        ) {
           termRef.current.bpm = bpm;
           // console.log(termRef.current, { index, 抽象具象 });
           termRef.current.texs = randomTexs(texCache.current);
@@ -176,6 +180,7 @@ export default function Page() {
           termRef.current.抽象具象 = 抽象具象;
           termRef.current.time = 0;
           bpmCounter = 0;
+          termRef.current.index = index;
           view.next(index, termRef.current.bpm);
         }
         termRef.current.time += timer.getDelta();

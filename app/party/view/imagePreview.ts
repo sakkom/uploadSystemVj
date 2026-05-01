@@ -72,12 +72,12 @@ export function imagePreview(scene: THREE.Scene) {
     renderer: THREE.WebGLRenderer,
   ) => {
     windowAspect = aspect;
-    const geo = new THREE.PlaneGeometry(2, 2, 1, 1);
+    const geo = new THREE.PlaneGeometry(2, 2, 500, 500);
 
     uniforms.uBpm.value = 100;
 
     shaderMap = 抽象具像シェーダ.map(
-      (s) => new THREE.ShaderMaterial({ uniforms, ...s, depthTest: false }),
+      (s) => new THREE.ShaderMaterial({ uniforms, ...s, depthTest: true }),
     );
     connectEffect = connectShader.map(
       (s) => new THREE.ShaderMaterial({ uniforms: {}, ...s, depthTest: false }),
@@ -133,7 +133,9 @@ export function imagePreview(scene: THREE.Scene) {
         uniforms.uTermTime.value = 0;
         uniforms.uBpm.value = bpm;
         if (mesh) {
+          // console.log("change", index);
           (mesh.material as THREE.ShaderMaterial) = shaderMap[index];
+          // (mesh.material as THREE.ShaderMaterial) = shaderMap[2];
         }
         isConnect = false;
       }, 1000);

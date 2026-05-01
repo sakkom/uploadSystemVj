@@ -155,13 +155,19 @@ export const shader0 = {
      }
 
      float index = mod(floor(bpmTime), 35.);
+     float randomIndex = rand1(uBpmCount);
       // index = 2.;
 
       vec4 color;
-      if(index >= 0. && index <= 9.) color = sketch_block(texUv, bpmTime, uv);
-      else if(index >= 10. && index <= 19.) color = sketch_distored(texUv, bpmTime, uv);
-      else if(index >= 20. && index <= 29.) color = sketch_lumi(texUv, bpmTime, uv);
-      else if(index >= 30. && index <= 34.) color = sketch_yohaku(texUv, bpmTime);
+      // if(index >= 0. && index <= 9.) color = sketch_block(texUv, bpmTime, uv);
+      // else if(index >= 10. && index <= 19.) color = sketch_distored(texUv, bpmTime, uv);
+      // else if(index >= 20. && index <= 29.) color = sketch_lumi(texUv, bpmTime, uv);
+      // else if(index >= 30. && index <= 34.) color = sketch_yohaku(texUv, bpmTime);
+
+      if(randomIndex > 0.66) color = sketch_block(texUv, bpmTime, uv);
+      else if(randomIndex > 0.33) color = sketch_distored(texUv, bpmTime, uv);
+      else  color = sketch_lumi(texUv, bpmTime, uv);
+
 
       gl_FragColor = color;
    }`,

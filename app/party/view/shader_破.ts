@@ -135,12 +135,17 @@ export const shader1 = {
 
      float bpmTime = uBpm / 60. * uTermTime;
      float index = mod(floor(bpmTime), 30.);
+     float randomIndex = rand1(uBpmCount);
 
      vec4 color;
 
-     if(index >= 0. && index <= 9.) color = sketch_cyber(texUv, bpmTime);
-     else if(index >= 10. && index <= 19.) color = sketch_mandara(bpmTime);
-     else if(index >= 20. && index <= 29.) color = sketch_distored(bpmTime);
+     // if(index >= 0. && index <= 9.) color = sketch_cyber(texUv, bpmTime);
+     // else if(index >= 10. && index <= 19.) color = sketch_mandara(bpmTime);
+     // else if(index >= 20. && index <= 29.) color = sketch_distored(bpmTime);
+
+     if(randomIndex > 0.66) color = sketch_cyber(texUv, bpmTime);
+     else if(randomIndex > 0.33) color = sketch_mandara(bpmTime);
+     else  color = sketch_distored(bpmTime);
 
      gl_FragColor = color;
    }`,
