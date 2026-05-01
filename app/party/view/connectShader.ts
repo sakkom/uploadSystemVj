@@ -1,4 +1,4 @@
-export const shader2 = {
+export const connect0 = {
   vertexShader: `
      varying vec2 vUv;
      void main() {
@@ -10,10 +10,6 @@ export const shader2 = {
   fragmentShader: `
    varying vec2 vUv;
    uniform float uTime;
-   uniform sampler2D uTex;
-   uniform sampler2D uLive;
-   uniform float uWindowAspect;
-   uniform float uTexAspect;
 
    float rand1(float y) {
      return fract(sin(y * 12.9898) * 43758.5453123);
@@ -42,32 +38,6 @@ export const shader2 = {
 
 
    void main() {
-     vec2 uv = vUv;
-     uv = coverUv(uv, uTexAspect, uWindowAspect);
-
-     vec3 texCol = texture2D(uTex, uv).rgb;
-     vec3 liveTex = texture2D(uLive, vUv).rgb;
-     int index = int(mod(uTime, 4.));
-     if(index == 1) {
-        liveTex = 1. - liveTex;
-     }
-     if(index == 2) {
-        liveTex = vec3(0., liveTex.g, liveTex.b);
-     }
-     if(index == 3) {
-        liveTex = pow(liveTex, vec3(10.));
-     }
-     if(index == 4) {
-        liveTex = liveTex;
-     }
-     liveTex = pow(liveTex, vec3(3.));
-
-     float texL = lumi(texCol);
-     float mask = step(texL, 0.5);
-
-     vec3 mixColor = mix(liveTex, texCol, 1.-mask);
-     gl_FragColor = vec4(mixColor, 1.);
-     gl_FragColor = vec4(liveTex, 1.);
      gl_FragColor = vec4(vec3(1., 0., 0.), 1.);
    }`,
 };

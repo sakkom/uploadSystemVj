@@ -38,7 +38,7 @@ function getSketchIndex(t: number) {
   seedTime -= Math.PI / 2;
   const 抽象具象 = (seedTime + Math.PI / 2) % (Math.PI * 2) < Math.PI;
   let index = Math.sin(seedTime) * 0.5 + 0.5;
-  index *= 4;
+  index *= 1;
   index = Math.round(index);
 
   // console.log(index, 抽象具象);
@@ -77,7 +77,7 @@ export default function Page() {
   const initial = getSketchIndex(0);
   const termRef: RefObject<抽象具像interface> = useRef({
     抽象具象: initial.抽象具象,
-    bpm: 50,
+    bpm: 100,
     index: initial.index,
     texs: [],
     time: 0,
@@ -131,7 +131,7 @@ export default function Page() {
       setIsInitTex(true);
 
       const view = imagePreview(scene);
-      view.init(aspect, camera);
+      view.init(aspect, camera, renderer);
 
       const initLive = async () => {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -149,6 +149,7 @@ export default function Page() {
       //bpm test clock
       const timer = new THREE.Timer();
       let bpmCounter = 0;
+      let snapCounter = 0;
       let lastTime = 0;
       let frameCount = 0;
       const loop = () => {
@@ -164,7 +165,7 @@ export default function Page() {
         const time = timer.getElapsed();
         view.setTime(time);
 
-        const bpm = 50;
+        const bpm = 100;
 
         const { index, 抽象具象 } = getSketchIndex(time);
         if (抽象具象 !== termRef.current.抽象具象) {
@@ -175,6 +176,7 @@ export default function Page() {
           termRef.current.抽象具象 = 抽象具象;
           termRef.current.time = 0;
           bpmCounter = 0;
+          view.next(index, termRef.current.bpm);
         }
         termRef.current.time += timer.getDelta();
 
@@ -182,16 +184,26 @@ export default function Page() {
         const bpmCount = Math.floor(
           (termRef.current.bpm / 60) * termRef.current.time,
         );
+        const snapCount = Math.floor(
+          ((termRef.current.bpm * 3) / 60) * termRef.current.time,
+        );
         // console.log(bpmCount);
         const onBpm = bpmCounter !== bpmCount;
         bpmCounter = bpmCount;
+        const onSnapBpm = snapCounter !== snapCount;
+        snapCounter = snapCount;
         // console.log({ bpmCounter, index, term: termRef.current.抽象具象 });
 
-        if (onBpm) {
-          const tex = termRef.current.texs[bpmCount];
-          if (tex) view.update(tex, termRef.current.index);
+        if (onSnapBpm) {
+          view.snap();
         }
-        view.updateMaterial(index);
+
+        if (onBpm) {
+          const tex =
+            termRef.current.texs[bpmCount % termRef.current.texs.length];
+          if (tex) view.update(tex, bpmCount);
+        }
+        view.updateTermTime(termRef.current.time);
 
         renderer.render(scene, camera);
         requestAnimationFrame(loop);
