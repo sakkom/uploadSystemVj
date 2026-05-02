@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { shader2 } from "./shader";
 import { shader0 } from "./shader_序";
 import { shader1 } from "./shader_破";
-import { connect0, connect1, connect2 } from "./connectShader";
+import { connect0 } from "./connectShader";
 
 //使用側
 // const { scaleH, scaleW } = ajustAspect(tex, camera);
@@ -38,7 +38,7 @@ function setScale(aspect: number, camera: THREE.PerspectiveCamera) {
 // }
 
 const 抽象具像シェーダ = [shader0, shader1, shader2];
-const connectShader = [connect0, connect1, connect2];
+const connectShader = [connect0];
 
 export function imagePreview(scene: THREE.Scene) {
   const group = new THREE.Group();
@@ -78,7 +78,7 @@ export function imagePreview(scene: THREE.Scene) {
     windowAspect = aspect;
     const geo = new THREE.PlaneGeometry(2, 2, 500, 500);
 
-    uniforms.uBpm.value = 50;
+    uniforms.uBpm.value = 60;
 
     shaderMap = 抽象具像シェーダ.map(
       (s) => new THREE.ShaderMaterial({ uniforms, ...s, depthTest: true }),
@@ -147,7 +147,7 @@ export function imagePreview(scene: THREE.Scene) {
         if (mesh) {
           // console.log("change", index);
           (mesh.material as THREE.ShaderMaterial) = shaderMap[index];
-          // (mesh.material as THREE.ShaderMaterial) = shaderMap[1];
+          // (mesh.material as THREE.ShaderMaterial) = shaderMap[2];
         }
         isConnect = false;
       }, 1000);

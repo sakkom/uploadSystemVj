@@ -33,7 +33,7 @@ export function setThree(canvas: HTMLCanvasElement) {
 const 序破急 = 2;
 function getSketchIndex(t: number) {
   // const 一周何秒 = 600; //600で5分で抽象具象が２回、1時間12回の抽象具象
-  const 一周何秒 = 100; //600で5分で抽象具象が２回、1時間12回の抽象具象
+  const 一周何秒 = 600; //600で5分で抽象具象が２回、1時間12回の抽象具象
   let seedTime = t;
   seedTime *= (Math.PI * 2) / 一周何秒;
   seedTime -= Math.PI / 2;
@@ -166,7 +166,7 @@ export default function Page() {
         const time = timer.getElapsed();
         view.setTime(time);
 
-        const bpm = 50;
+        const bpm = (Math.sin(time * 0.1) * 0.5 + 0.5) * 60 + 60;
 
         const { index, 抽象具象 } = getSketchIndex(time);
         if (

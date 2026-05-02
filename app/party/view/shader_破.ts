@@ -127,6 +127,83 @@ export const shader1 = {
       return vec4(color, 1.);
    }
 
+   vec4 sketch_kuroi() {
+     vec2 uv = vUv;
+     uv.x *= uWindowAspect;
+     vec2 offset = vec2((fract(uTime * .1) - 0.5) * 2.0, 0.0);
+     float dist = length(uv - offset) - 0.3;
+     float a = atan(uv.y, uv.x);
+     float noise = rand2(uv) - 0.5;
+     float s = smoothstep(1.0, 0.5, abs(dist));
+     vec3 col = vec3(s);
+     col += noise * 0.1;
+     col = pow(col, vec3(3.));
+     return vec4(1.-col, 1.);
+
+   }
+
+   vec4 sketch_tama0() {
+     vec2 uv = vUv * 2.0 - 1.0;
+     uv.x *= uWindowAspect;
+     vec2 pos = uv;
+
+     vec3 balls = vec3(0.0);
+
+     float finalColor = 100.0;
+     float index = 0.0;
+
+     float loopNum = 80.0;
+
+     for (float i = 0.0; i < loopNum; i++) {
+       float ni = (i + 1.0) / loopNum;
+       float delay = i * 0.01;
+       // vec2 offset = orbit(uTime + delay);
+       float angle = rand1(i) * 6.28;
+       //startの調整
+       float start = 1.5;
+       float speed = uTime * 3.0;
+       float scale = (sin(speed * ni + start) * 0.5 + 0.5);
+       vec2 offset = vec2(cos(angle), sin(angle)) * scale;
+
+       //pos noise
+       vec2 noiseOffset = vec2(rand2(pos * 12.34), rand2(pos * 56.78)) - 0.5;
+       pos += noiseOffset * 0.005;
+
+       float lightness;
+       if (rand1(uTime) > 0.6 && uTime > 3.5 && mod(uTime, 5.0) > 2.5) {
+         // vec2 noiseOffset = vec2(rand2(pos * 12.34), rand2(pos * 56.78)) - 0.5;
+         // pos += noiseOffset * 0.03;
+         lightness = 1.0;
+       } else {
+         // pos.x = floor(pos.x * 1000.0) / 1000.0;
+         // pos.y = floor(pos.y * 100.0) / 100.0;
+         // pos = mod(vUv + 0.5, 0.5) - 0.5;
+
+         lightness = 0.5;
+       }
+
+       float ballBasedSize = 1.5;
+       float ballSize = (cos(uTime + i) * 0.5 + 0.5) * ballBasedSize * ni;
+       float dist1 = length(pos - offset) - ballSize;
+       float dist2 = min(abs(pos.x - offset.x), abs(pos.y - offset.y)) - 0.01;
+       float dist = mix(dist1, dist2, scale);
+       float col = smoothstep(0.1, -0.1, dist);
+       // vec3 ame = mix(vec3(1.0, 0.0, 0.0), vec3(.0, 0.0, 1.0), scale);
+
+       vec3 color = hsl2rgb(vec3(0.7 * pow(scale, 0.9), 1.0, lightness));
+       col *= 1.0 - ni;
+       // color = mix(vec3(1.0), color, 0.3);
+
+       balls += col * color / 1.8;
+     }
+
+     balls = pow(balls, vec3(2.0));
+     if (uTime < 35.0) {
+       return vec4(vec3(balls), 1.0);
+     } else {
+       return vec4(vec3(0.0), 1.0);
+     }
+   }
 
 
    void main() {
@@ -134,13 +211,33 @@ export const shader1 = {
      vec2 texUv = coverUv(uv, uTexAspect, uWindowAspect);
 
      float bpmTime = uBpm / 60. * uTermTime;
-     float index = mod(floor(bpmTime), 30.);
+
+     float s0 = 1.;
+     float s1 = s0 + 5.;
+     float s2 = s1 + 2.;
+     float s3 = s2 + 1.;
+     float s4 = s3 + 2.;
+     float s5 = s4 + 10.;
+     float s6 = s5 + 2.;
+     float s7 = s6 + 5.;
+     float s8 = s7 + 3.;
+     float s9 = s8 + 1.;
+
+     float index = mod((bpmTime), s9);
+
 
      vec4 color;
 
-     if(index >= 0. && index <= 9.) color = sketch_cyber(texUv, bpmTime);
-     else if(index >= 10. && index <= 19.) color = sketch_mandara(bpmTime);
-     else if(index >= 20. && index <= 29.) color = sketch_distored(bpmTime);
+     if(index < s0) color = vec4(vec3(0.), 1.);
+     else if(index < s1) color = sketch_cyber(texUv, bpmTime);
+     else if(index < s2) color = sketch_distored(bpmTime);
+     else if(index < s3) color = vec4(vec3(0.), 1.);
+     else if(index < s4) color = sketch_kuroi();
+     else if(index < s5) color = sketch_mandara(bpmTime);
+     else if(index < s6) color = sketch_cyber(texUv, bpmTime);
+     else if(index < s7) color = sketch_distored(bpmTime);
+     else if(index < s8) color = sketch_kuroi();
+     else if(index < s9) color = vec4(vec3(0.), 1.);
 
      gl_FragColor = color;
    }`,
