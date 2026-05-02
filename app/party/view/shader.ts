@@ -93,17 +93,11 @@ export const shader2 = {
        float randomIndex = rand1(uBpmCount);
 
        vec3 pos = position;
-       // if(index >= 0. && index <= 9.) pos = sketch_z(bpmTime);
-       // else if(index >= 10. && index <= 19.) pos = sketch_piano(bpmTime);
-       // else if(index >= 20. && index <= 29.) pos = sketch_rotateXy(bpmTime);
-
-       if(randomIndex > 0.66) pos = sketch_z(bpmTime);
-       else if(randomIndex > 0.33) pos = sketch_piano(bpmTime);
-       else pos = sketch_rotateXy(bpmTime);
+       if(index >= 0. && index <= 9.) pos = sketch_piano(bpmTime);
+       else if(index >= 10. && index <= 19.) pos = sketch_z(bpmTime);
+       else if(index >= 20. && index <= 29.) pos = sketch_rotateXy(bpmTime);
 
        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-
-
      }
    `,
   fragmentShader: `
@@ -186,19 +180,21 @@ export const shader2 = {
     vec2 bUv = floor(uv * size) / size;
 
     vec3 liveCol = texture2D(uLive, bUv).rgb;
-    liveCol = pow(liveCol, vec3(.1)); //uKido
+    liveCol = pow(liveCol, vec3(.3)); //uKido
 
     vec3 texCol = texture2D(uTex, bUv).rgb;
 
-    texCol = rand1(uBpmCount + 1.1) > .5 ? vec3(abs(liveCol-texCol)) : texCol;
+    // liveCol = pow(liveCol, vec3(2.));
+    texCol = vec3(abs(liveCol-texCol));
+
 
     float texL = lumi(texCol);
+    // texL = pow(texL, .5);
 
     vec3 stepValue = rand1(uBpmCount) > .5 ? vec3(.5) : vec3(.5) * fract(bpmTime);
     texCol = step(texL, stepValue);
 
-
-    return vec4(texCol, 1.);
+    return vec4(1.-texCol, 1.);
    }
 
    vec4 sketch_z(vec2 uv, float bpmTime) {
@@ -233,14 +229,9 @@ export const shader2 = {
      float randomIndex = rand1(uBpmCount) * 3.;
 
      vec4 color;
-     // if(index >= 0. && index <= 9.) color = sketch_z(uv, bpmTime);
-     // else if(index >= 10. && index <= 19.) color = sketch_piano(uv, bpmTime);
-     // else if(index >= 20. && index <= 29.) color = sketch_rotateXy(uv, bpmTime);
-
-     if(randomIndex > 0.66) color = sketch_z(uv, bpmTime);
-     else if(randomIndex > 0.33) color = sketch_piano(uv, bpmTime);
-     else color = sketch_rotateXy(uv, bpmTime);
-
+     if(index >= 0. && index <= 9.) color = sketch_piano(uv, bpmTime);
+     else if(index >= 10. && index <= 19.) color = sketch_z(uv, bpmTime);
+     else if(index >= 20. && index <= 29.) color = sketch_rotateXy(uv, bpmTime);
 
      gl_FragColor = color;
    }`,

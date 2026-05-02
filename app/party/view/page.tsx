@@ -33,7 +33,7 @@ export function setThree(canvas: HTMLCanvasElement) {
 const 序破急 = 2;
 function getSketchIndex(t: number) {
   // const 一周何秒 = 600; //600で5分で抽象具象が２回、1時間12回の抽象具象
-  const 一周何秒 = 60; //600で5分で抽象具象が２回、1時間12回の抽象具象
+  const 一周何秒 = 100; //600で5分で抽象具象が２回、1時間12回の抽象具象
   let seedTime = t;
   seedTime *= (Math.PI * 2) / 一周何秒;
   seedTime -= Math.PI / 2;
@@ -47,7 +47,7 @@ function getSketchIndex(t: number) {
   return { index, 抽象具象 };
 }
 
-const DEV = true;
+const DEV = false;
 const loader = new THREE.TextureLoader();
 
 interface 抽象具像interface {

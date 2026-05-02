@@ -48,9 +48,9 @@ export const shader0 = {
      vec2 uv0 = coverUv(uv, uAspect0);
      vec2 uv1 = coverUv(uv, uAspect1);
 
-     float ratio = fract(uTime * 5.);
+     float ratio = fract(uTime * .5);
 
-     float block = floor(ratio * 50.) + 5.;
+     float block = floor(ratio * 50.) + 50.;
      vec2 blockUv = floor((vUv - .5)* block) / block + .5;
      blockUv = coverUv(blockUv, uAspect1);
 

@@ -99,12 +99,12 @@ export const shader1 = {
    }
 
    vec4 sketch_distored(float bpmTime) {
-      vec2 texUv = vUv - (rand1(uBpmCount) - .5);
+      vec2 texUv = vUv;
 
       float amp = fract(bpmTime);
-      float diff = rand1(uBpmCount) * 0.5;
-      float freqY = texUv.y * 15.;
-      float freqX = texUv.x * 15.;
+      float diff = rand1(uBpmCount) * 0.5 + .1;
+      float freqY = texUv.y * 25. + 5.;
+      float freqX = texUv.x * 25. + 5.;
       texUv.x += sin(freqX * rand1(uBpmCount) + fract(bpmTime))  * diff + sin(freqY * rand1(uBpmCount + 1.1) + fract(bpmTime)) * diff;
       texUv.y += sin(freqX * rand1(uBpmCount+2.2) - fract(bpmTime))  * diff + sin(freqY * rand1(uBpmCount+3.3) - fract(bpmTime))  * diff;
       texUv = rotatePos(texUv - .5, rand1(floor(length(texUv - .5) * 10.))) + .5;
@@ -135,17 +135,12 @@ export const shader1 = {
 
      float bpmTime = uBpm / 60. * uTermTime;
      float index = mod(floor(bpmTime), 30.);
-     float randomIndex = rand1(uBpmCount);
 
      vec4 color;
 
-     // if(index >= 0. && index <= 9.) color = sketch_cyber(texUv, bpmTime);
-     // else if(index >= 10. && index <= 19.) color = sketch_mandara(bpmTime);
-     // else if(index >= 20. && index <= 29.) color = sketch_distored(bpmTime);
-
-     if(randomIndex > 0.66) color = sketch_cyber(texUv, bpmTime);
-     else if(randomIndex > 0.33) color = sketch_mandara(bpmTime);
-     else  color = sketch_distored(bpmTime);
+     if(index >= 0. && index <= 9.) color = sketch_cyber(texUv, bpmTime);
+     else if(index >= 10. && index <= 19.) color = sketch_mandara(bpmTime);
+     else if(index >= 20. && index <= 29.) color = sketch_distored(bpmTime);
 
      gl_FragColor = color;
    }`,

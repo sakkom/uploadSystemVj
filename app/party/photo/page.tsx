@@ -121,7 +121,12 @@ export default function Page() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
+
     if (!files) return;
+    if (files?.length > 5) {
+      alert("5枚まででお願いします");
+      return;
+    }
     if (!isFile) setIsLoading(true);
     const urls = Array.from(files).map((file) => URL.createObjectURL(file));
 
