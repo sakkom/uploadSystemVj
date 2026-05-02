@@ -33,7 +33,7 @@ export function setThree(canvas: HTMLCanvasElement) {
 const 序破急 = 2;
 function getSketchIndex(t: number) {
   // const 一周何秒 = 600; //600で5分で抽象具象が２回、1時間12回の抽象具象
-  const 一周何秒 = 600; //600で5分で抽象具象が２回、1時間12回の抽象具象
+  const 一周何秒 = 450; //600で5分で抽象具象が２回、1時間12回の抽象具象
   let seedTime = t;
   seedTime *= (Math.PI * 2) / 一周何秒;
   seedTime -= Math.PI / 2;
@@ -84,25 +84,25 @@ export default function Page() {
     time: 0,
   });
 
-  // useEffect(() => {
-  //   const poll = async () => {
-  //     if (!rendererRef.current) return;
-  //     const res = await fetch("/api/get-images");
-  //     //R2の使用上全取得
-  //     const { urls } = await res.json();
-  //     //ここのロジックで最新の画像をフィードバック
-  //     urls.forEach((url: string) => {
-  //       if (texCache.current.has(url)) return;
-  //       loader.load(url, (tex) => {
-  //         rendererRef.current?.initTexture(tex);
-  //         texCache.current.set(url, tex);
-  //       });
-  //     });
-  //   };
+  useEffect(() => {
+    const poll = async () => {
+      if (!rendererRef.current) return;
+      const res = await fetch("/api/get-images");
+      //R2の使用上全取得
+      const { urls } = await res.json();
+      //ここのロジックで最新の画像をフィードバック
+      urls.forEach((url: string) => {
+        if (texCache.current.has(url)) return;
+        loader.load(url, (tex) => {
+          rendererRef.current?.initTexture(tex);
+          texCache.current.set(url, tex);
+        });
+      });
+    };
 
-  //   const interval = setInterval(poll, 5000);
-  //   return () => clearInterval(interval);
-  // }, []);
+    const interval = setInterval(poll, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -114,7 +114,7 @@ export default function Page() {
       const init = async () => {
         const res = await fetch("/api/get-images");
         let { urls } = await res.json();
-        urls = DEV ? urls.slice(0, 15) : urls;
+        // urls = DEV ? urls.slice(0, 15) : urls;
 
         await Promise.all(
           urls.map(async (url: string) => {
